@@ -139,7 +139,7 @@
 
         .multi-currency {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             font-size: 12px;
             color: var(--text-secondary);
             padding: 6px 0;
@@ -251,10 +251,15 @@
         }
         .card-left { display:flex; align-items:center; gap:12px; min-width:0; }
         .card-icon {
-            width:38px; height:38px; border-radius:var(--radius-sm);
-            display:flex; align-items:center; justify-content:center;
+            width:38px;
+            height:38px;
+            border-radius:var(--radius-sm);
+            display:flex;
+            align-items:center;
+            justify-content:center;
             flex-shrink:0;
-            font-size:20px;
+            font-size:22px;
+            background: rgba(255,255,255,0.03);
         }
         .card-info { min-width:0; }
         .card-name { font-size:15px; font-weight:500; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -402,15 +407,7 @@
             width: 80px;
             height: 80px;
             opacity: 0.85;
-        }
-        .empty-state .empty-icon svg {
-            width: 100%;
-            height: 100%;
-            stroke-width: 2.2;
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            filter: drop-shadow(0 0 4px rgba(51, 214, 255, 0.3));
+            font-size: 48px;
         }
         .empty-state .empty-text { font-size: 16px; color: var(--text-secondary); font-weight: 500; }
         .empty-state .empty-sub { font-size: 13px; color: var(--text-secondary); opacity: 0.7; }
@@ -610,11 +607,8 @@
             width:36px; height:36px; border-radius:50%;
             display:flex; align-items:center; justify-content:center;
             flex-shrink:0;
+            font-size:18px;
         }
-        .op-icon svg { width:20px; height:20px; stroke-width:2.2; fill:none; stroke-linecap:round; stroke-linejoin:round; }
-        .op-icon.income svg { stroke:var(--green); }
-        .op-icon.expense svg { stroke:var(--red); }
-        .op-icon.transfer svg { stroke:var(--yellow); }
         .op-info { min-width:0; }
         .op-category { font-size:14px; font-weight:500; color:var(--text-primary); }
         .op-desc { font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -697,7 +691,6 @@
                 <div class="multi-currency" id="multiCurrency"></div>
             </div>
 
-            <!-- FLOATING TAB BAR -->
             <div class="floating-tabs" id="accountTabs2026">
                 <div class="tab-bg tab-all" id="tabBg"></div>
                 <button class="tab-btn-2026 active" data-tab="all">
@@ -756,7 +749,6 @@
                 </div>
             </div>
 
-            <!-- FILTER BAR with DATE -->
             <div class="filter-bar" id="operationFilters">
                 <div class="filter-group">
                     <select id="filterType"><option value="">Тип</option><option value="income">Доход</option><option value="expense">Расход</option><option value="transfer">Перевод</option></select>
@@ -900,7 +892,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ================================================================
-    //  STATE
+    //  CONSTANTS
     // ================================================================
     const STATE_KEY = 'sumlio_data';
 
@@ -922,6 +914,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const CURRENCY_LIST = ['USD', 'EUR', 'CNY', 'BYN', 'RUB'];
 
+    const ACCOUNT_ICONS = {
+        card: '💳',
+        cash: '💰',
+        deposit: '🏦',
+        dream: '🎯',
+        crypto: '₿',
+        investment: '📈'
+    };
+
+    const ACCOUNT_TYPES = {
+        card: 'Карта',
+        cash: 'Наличные',
+        deposit: 'Вклад',
+        dream: 'Накопления',
+        crypto: 'Крипта',
+        investment: 'Инвестиции'
+    };
+
+    // ================================================================
+    //  STATE
+    // ================================================================
     function getEmptyState() {
         return {
             accounts: [],
@@ -930,7 +943,7 @@ document.addEventListener('DOMContentLoaded', function() {
             goals: [],
             order: [],
             nextId: 1,
-            currency: 'USD',
+            currency: 'BYN',
             cashbackRates: {},
             theme: 'dark',
             exchangeRates: {}
@@ -948,7 +961,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 for (const key in empty) {
                     if (!(key in parsed)) parsed[key] = empty[key];
                 }
-                if (!parsed.currency) parsed.currency = 'USD';
+                if (!parsed.currency) parsed.currency = 'BYN';
                 if (!parsed.cashbackRates) parsed.cashbackRates = {};
                 if (!parsed.exchangeRates) parsed.exchangeRates = {};
                 if (!parsed.theme) parsed.theme = 'dark';
@@ -993,7 +1006,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function formatCurrency(amount, currencyCode) {
-        const code = currencyCode || state.currency || 'USD';
+        const code = currencyCode || state.currency || 'BYN';
         const symbol = getCurrencySymbol(code);
         return symbol + (amount || 0).toFixed(2);
     }
@@ -1010,25 +1023,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return cat ? cat.name : 'Без категории';
     }
 
-    function getCategoryColor(id) {
-        if (!id) return '#6c6e75';
-        const cat = getCategory(id);
-        return cat ? cat.color : '#6c6e75';
-    }
-
     function getCategoryCashback(id) {
         if (!id) return 0;
         return state.cashbackRates && state.cashbackRates[id] ? state.cashbackRates[id] : 0;
     }
-
-    const ACCOUNT_TYPES = {
-        card: 'Карта',
-        cash: 'Наличные',
-        deposit: 'Вклад',
-        dream: 'Накопления',
-        crypto: 'Крипта',
-        investment: 'Инвестиции'
-    };
 
     // ================================================================
     //  TOAST
@@ -1199,27 +1197,42 @@ document.addEventListener('DOMContentLoaded', function() {
     function getConvertedBalances() {
         const total = getTotalBalance();
         const rates = state.exchangeRates || {};
-        const result = {};
-        CURRENCY_LIST.forEach(code => {
-            if (code === 'USD') {
-                result[code] = total;
-            } else if (rates[code]) {
-                result[code] = total * rates[code];
-            } else {
-                result[code] = total;
-            }
-        });
-        return result;
+        
+        // Конвертируем через USD
+        const usdRate = rates.USD || 1;
+        const eurRate = rates.EUR || 0.86;
+        const cnyRate = rates.CNY || 7.2;
+        const rubRate = rates.RUB || 90;
+        
+        // Базовая валюта — BYN
+        const bynToUsd = 1 / (rates.BYN || 3.0);
+        const totalUsd = total * bynToUsd;
+        
+        return {
+            BYN: total,
+            USD: totalUsd,
+            EUR: totalUsd * eurRate,
+            CNY: totalUsd * cnyRate,
+            RUB: totalUsd * rubRate
+        };
     }
 
     function renderMultiCurrency() {
         const container = document.getElementById('multiCurrency');
         if (!container) return;
+        
         const balances = getConvertedBalances();
-        container.innerHTML = CURRENCY_LIST.map(code => {
-            const symbol = getCurrencySymbol(code);
-            return `<span>${symbol}${balances[code].toFixed(2)}</span>`;
-        }).join('');
+        
+        container.innerHTML = [
+            { code: 'USD', val: balances.USD, symbol: '$' },
+            { code: 'EUR', val: balances.EUR, symbol: '€' },
+            { code: 'CNY', val: balances.CNY, symbol: '¥' },
+            { code: 'RUB', val: balances.RUB, symbol: '₽' }
+        ].map(c => {
+            // Пропускаем, если сумма слишком маленькая
+            if (c.val < 0.01) return '';
+            return `<span>${c.symbol}${c.val.toFixed(2)}</span>`;
+        }).filter(s => s).join('');
     }
 
     // ================================================================
@@ -1278,7 +1291,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (ordered.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon"><svg viewBox="0 0 24 24" stroke="#33D6FF" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7C3 5.9 3.9 5 5 5H18C19.1 5 20 5.9 20 7V17C20 18.1 19.1 19 18 19H5C3.9 19 3 18.1 3 17V7Z"/><path d="M16 12H20"/><circle cx="16" cy="12" r="1"/></svg></div>
+                    <div class="empty-icon">💳</div>
                     <div class="empty-text">Нет счетов</div>
                     <div class="empty-sub">Создайте первый счёт</div>
                     <button class="empty-action-btn" id="emptyCreateAccountBtn">+ Создать счёт</button>
@@ -1288,47 +1301,58 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             container.innerHTML = ordered.map(a => {
                 const typeLabel = ACCOUNT_TYPES[a.type] || a.type || 'Счёт';
-                const iconSvg = a.icon || '💳';
-                const currency = a.currency || state.currency || 'USD';
+                const icon = ACCOUNT_ICONS[a.type] || a.icon || '💳';
+                const currency = a.currency || state.currency || 'BYN';
+                const symbol = getCurrencySymbol(currency);
+                
                 return `
                     <div class="card-item" data-id="${a.id}">
                         <div class="card-left">
-                            <div class="card-icon" style="color:${a.color || '#1a2634'}">${iconSvg}</div>
+                            <div class="card-icon" style="color:${a.color || '#4da6ff'}">
+                                ${icon}
+                            </div>
                             <div class="card-info">
                                 <div class="card-name">${a.name}</div>
                                 <div class="card-sub">${typeLabel} • ${currency}</div>
                             </div>
                         </div>
-                        <div class="card-right"><div class="card-balance">${formatCurrency(a.balance, currency)}</div></div>
+                        <div class="card-right">
+                            <div class="card-balance">${symbol}${a.balance.toFixed(2)}</div>
+                        </div>
                     </div>
                 `;
             }).join('');
         }
 
+        // Debts
         const debts = state.accounts.filter(a => (a.balance || 0) < 0);
         const debtsContainer = document.getElementById('debtsList');
         if (debtsContainer) {
             if (debts.length === 0) {
                 debtsContainer.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-icon"><svg viewBox="0 0 24 24" stroke="#FF9F43" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3H14L19 8V20H7V3Z"/><path d="M14 3V8H19"/><path d="M10 14H16"/></svg></div>
+                        <div class="empty-icon">💰</div>
                         <div class="empty-text">Нет долгов</div>
                         <div class="empty-sub">Все счета в плюсе</div>
                     </div>
                 `;
             } else {
-                debtsContainer.innerHTML = debts.map(a => `
-                    <div class="card-item" data-id="${a.id}">
-                        <div class="card-left">
-                            <div class="card-icon">${a.icon || '💳'}</div>
-                            <div class="card-info"><div class="card-name">${a.name}</div></div>
+                debtsContainer.innerHTML = debts.map(a => {
+                    const icon = ACCOUNT_ICONS[a.type] || a.icon || '💰';
+                    return `
+                        <div class="card-item" data-id="${a.id}">
+                            <div class="card-left">
+                                <div class="card-icon" style="color:${a.color || '#ff4466'}">${icon}</div>
+                                <div class="card-info"><div class="card-name">${a.name}</div></div>
+                            </div>
+                            <div class="card-right"><div class="card-balance negative">${formatCurrency(a.balance, a.currency || state.currency)}</div></div>
                         </div>
-                        <div class="card-right"><div class="card-balance negative">${formatCurrency(a.balance, a.currency || state.currency)}</div></div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
         }
 
+        // Total stats
         const totalIncomeDisplay = document.getElementById('totalIncomeDisplay');
         if (totalIncomeDisplay) totalIncomeDisplay.textContent = formatCurrency(getTotalIncome());
         const totalExpenseDisplay = document.getElementById('totalExpenseDisplay');
@@ -1352,7 +1376,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (state.goals.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon"><svg viewBox="0 0 24 24" stroke="#33D6FF" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><path d="M12 12L20 4"/><path d="M17 4H20V7"/></svg></div>
+                    <div class="empty-icon">🎯</div>
                     <div class="empty-text">Нет целей</div>
                     <div class="empty-sub">Создайте первую цель</div>
                 </div>
@@ -1453,7 +1477,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (state.categories.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon"><svg viewBox="0 0 24 24" stroke="#33D6FF" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg></div>
+                    <div class="empty-icon">📂</div>
                     <div class="empty-text">Нет категорий</div>
                     <div class="empty-sub">Создайте первую категорию</div>
                 </div>
@@ -1616,7 +1640,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (sorted.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon"><svg viewBox="0 0 24 24" stroke="#33D6FF" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3L21 7L17 11"/><path d="M21 7H7"/><path d="M7 13L3 17L7 21"/><path d="M3 17H17"/></svg></div>
+                    <div class="empty-icon">📋</div>
                     <div class="empty-text">Нет операций</div>
                     <div class="empty-sub">Добавьте первую операцию</div>
                 </div>
@@ -1697,7 +1721,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (state.operations.length === 0) {
             container.innerHTML = `
                 <div class="empty-state" style="padding:20px 0;">
-                    <div class="empty-icon"><svg viewBox="0 0 24 24" stroke="#33D6FF" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20H20"/><rect x="5" y="11" width="3" height="7" rx="1"/><rect x="10.5" y="7" width="3" height="11" rx="1"/><rect x="16" y="4" width="3" height="14" rx="1"/></svg></div>
+                    <div class="empty-icon">📊</div>
                     <div class="empty-text">Нет данных</div>
                     <div class="empty-sub">Добавьте операции для статистики</div>
                 </div>
@@ -1825,15 +1849,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         openModal('Редактировать счёт', `
             <div class="form-group"><label class="form-label">Название</label><input class="form-input" id="editAccName" value="${account.name||''}"></div>
-            <div class="form-group"><label class="form-label">Иконка</label><input class="form-input" id="editAccIcon" placeholder="🏦" value="${account.icon||'💳'}"></div>
+            <div class="form-group"><label class="form-label">Иконка</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0;">
+                    ${['💳','💰','🏦','🎯','₿','📈','🏠','🚗','✈️','🎓','💎','🌍'].map(ic => 
+                        `<span style="font-size:24px;cursor:pointer;padding:4px 8px;border-radius:8px;border:2px solid ${account.icon===ic?'var(--nav-active)':'transparent'};" onclick="document.getElementById('editAccIconInput').value='${ic}';document.querySelectorAll('.icon-option').forEach(el=>el.style.borderColor='transparent');this.style.borderColor='var(--nav-active)';">${ic}</span>`
+                    ).join('')}
+                </div>
+                <input class="form-input" id="editAccIconInput" placeholder="💳" value="${account.icon||'💳'}" style="margin-top:8px;">
+            </div>
             <div class="form-group"><label class="form-label">Тип</label><select class="form-select" id="editAccType">${typeOptions}</select></div>
             <div class="form-group"><label class="form-label">Валюта</label><select class="form-select" id="editAccCurrency">${currencyOptions}</select></div>
             <div class="form-group">
                 <label class="form-label">Цвет</label>
                 <div class="color-picker-wrapper">
-                    <input type="color" id="editAccColor" value="${account.color||'#1a2634'}">
-                    <div class="color-preview" id="editAccColorPreview" style="background:${account.color||'#1a2634'};"></div>
-                    <span class="color-hex-display" id="editAccColorHex">${account.color||'#1a2634'}</span>
+                    <input type="color" id="editAccColor" value="${account.color||'#4da6ff'}">
+                    <div class="color-preview" id="editAccColorPreview" style="background:${account.color||'#4da6ff'};"></div>
+                    <span class="color-hex-display" id="editAccColorHex">${account.color||'#4da6ff'}</span>
                 </div>
             </div>
             <div class="form-group"><label class="form-label">Баланс</label><input class="form-input" type="number" id="editAccBalance" step="0.01" value="${account.balance||0}"></div>
@@ -1860,10 +1891,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!nameInput) return;
             const name = nameInput.value.trim();
             if (!name) { showToast('Введите название'); return; }
-            const icon = document.getElementById('editAccIcon')?.value.trim() || '💳';
+            const icon = document.getElementById('editAccIconInput')?.value.trim() || '💳';
             const type = document.getElementById('editAccType')?.value || 'card';
-            const currency = document.getElementById('editAccCurrency')?.value || 'USD';
-            const color = document.getElementById('editAccColor')?.value || '#1a2634';
+            const currency = document.getElementById('editAccCurrency')?.value || 'BYN';
+            const color = document.getElementById('editAccColor')?.value || '#4da6ff';
             const balance = parseFloat(document.getElementById('editAccBalance')?.value) || 0;
             const allowOverdraft = document.getElementById('editAccOverdraft')?.checked || false;
             account.name = name; account.icon = icon; account.type = type; account.currency = currency;
@@ -1901,7 +1932,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         openModal('Новый счёт', `
             <div class="form-group"><label class="form-label">Название</label><input class="form-input" id="newAccName" placeholder="Например: Карта"></div>
-            <div class="form-group"><label class="form-label">Иконка</label><input class="form-input" id="newAccIcon" placeholder="💳" value="💳"></div>
+            <div class="form-group"><label class="form-label">Иконка</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;padding:4px 0;">
+                    ${['💳','💰','🏦','🎯','₿','📈','🏠','🚗','✈️','🎓','💎','🌍'].map(ic => 
+                        `<span style="font-size:24px;cursor:pointer;padding:4px 8px;border-radius:8px;border:2px solid transparent;" onclick="document.getElementById('newAccIconInput').value='${ic}';document.querySelectorAll('.new-icon-option').forEach(el=>el.style.borderColor='transparent');this.style.borderColor='var(--nav-active)';this.classList.add('new-icon-option');">${ic}</span>`
+                    ).join('')}
+                </div>
+                <input class="form-input" id="newAccIconInput" placeholder="💳" value="💳" style="margin-top:8px;">
+            </div>
             <div class="form-group"><label class="form-label">Тип</label><select class="form-select" id="newAccType">${typeOptions}</select></div>
             <div class="form-group"><label class="form-label">Валюта</label><select class="form-select" id="newAccCurrency">${currencyOptions}</select></div>
             <div class="form-group">
@@ -1937,9 +1975,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!nameInput) return;
             const name = nameInput.value.trim();
             if (!name) { showToast('Введите название'); return; }
-            const icon = document.getElementById('newAccIcon')?.value.trim() || '💳';
+            const icon = document.getElementById('newAccIconInput')?.value.trim() || '💳';
             const type = document.getElementById('newAccType')?.value || 'card';
-            const currency = document.getElementById('newAccCurrency')?.value || 'USD';
+            const currency = document.getElementById('newAccCurrency')?.value || 'BYN';
             const color = document.getElementById('newAccColor')?.value || '#4da6ff';
             const balance = parseFloat(document.getElementById('newAccBalance')?.value) || 0;
             const allowOverdraft = document.getElementById('newAccOverdraft')?.checked || false;
@@ -2508,7 +2546,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const required = ['accounts','categories','operations','goals','order','nextId','cashbackRates','currency','theme'];
                     for (const key of required) {
                         if (!(key in imported)) {
-                            imported[key] = getEmptyState()[key] || (key === 'cashbackRates' ? {} : (key === 'currency' ? 'USD' : []));
+                            imported[key] = getEmptyState()[key] || (key === 'cashbackRates' ? {} : (key === 'currency' ? 'BYN' : []));
                         }
                     }
                     if (!imported.exchangeRates) imported.exchangeRates = {};
@@ -2562,7 +2600,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ================================================================
-    //  AUTO BACKUP (every 5 min)
+    //  AUTO BACKUP
     // ================================================================
     setInterval(() => {
         localStorage.setItem('sumlio_backup', JSON.stringify(state));
@@ -2637,7 +2675,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(initFloatingTabs, 100);
 
-    console.log('✅ Sumlio v3.0 — Мультивалютный + Календарь (без звуков, прогноза и микрофона)');
+    console.log('✅ Sumlio v3.0 — Исправленная версия');
     console.log('📊 Данных:', { accounts: state.accounts.length, categories: state.categories.length, operations: state.operations.length, goals: state.goals.length });
 });
 </script>
